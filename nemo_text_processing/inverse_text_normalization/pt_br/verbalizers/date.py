@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ from nemo_text_processing.text_normalization.en.graph_utils import (
     GraphFst,
     delete_extra_space,
     delete_space,
+    insert_space,
 )
 from pynini.lib import pynutil
 
@@ -25,8 +26,7 @@ from pynini.lib import pynutil
 class DateFst(GraphFst):
     """
     Finite state transducer for verbalizing date, e.g.
-        date { month: "january" day: "5" year: "2012" preserve_order: true } -> february 5 2012
-        date { day: "5" month: "january" year: "2012" preserve_order: true } -> 5 february 2012
+        date { day: "1" month: "enero" preserve_order: true } -> 1 de enero
     """
 
     def __init__(self):
@@ -50,16 +50,20 @@ class DateFst(GraphFst):
             + delete_space
             + pynutil.delete("\"")
             + pynini.closure(NEMO_NOT_QUOTE, 1)
-            + delete_space
             + pynutil.delete("\"")
         )
-        # month (day) year
-        graph_mdy = (
-            month + delete_space + pynutil.insert("/") + day + delete_space + pynutil.insert("/") + year
+
+        # day month
+        graph_dmy = (
+            day
+            + delete_space
+            + pynutil.insert("/")
+            + month
+            + delete_space
+            + pynutil.insert("/")
+            + year.ques
         )
 
-        final_graph = graph_mdy
-
+        final_graph = graph_dmy
         delete_tokens = self.delete_tokens(final_graph)
-
         self.fst = delete_tokens.optimize()

@@ -208,16 +208,17 @@ class CardinalFst(GraphFst):
 
         graph = pynini.union((graph_int | graph_ind) + delete_space + graph_hundreds, graph_zero,)
 
+
         graph = graph @ pynini.union(
             pynutil.delete(pynini.closure("0")) + pynini.difference(NEMO_DIGIT, "0") + pynini.closure(NEMO_DIGIT), "0"
         )
 
-        labels_exception = [num_to_word(x) for x in range(0, 13)]
-
-        if input_case == INPUT_CASED:
-            labels_exception += [x.capitalize() for x in labels_exception]
-
-        graph_exception = pynini.union(*labels_exception).optimize()
+        # labels_exception = [num_to_word(x) for x in range(0, 13)]
+        #
+        # if input_case == INPUT_CASED:
+        #     labels_exception += [x.capitalize() for x in labels_exception]
+        #
+        # graph_exception = pynini.union(*labels_exception).optimize()
 
         graph = (
             pynini.cdrewrite(pynutil.delete("and"), NEMO_SPACE, NEMO_SPACE, NEMO_SIGMA)
@@ -230,14 +231,13 @@ class CardinalFst(GraphFst):
 
         self.graph_no_exception = graph
 
-        self.graph = (pynini.project(graph, "input") - graph_exception.arcsort()) @ graph
+        self.graph = graph#(pynini.project(graph, "input") - graph_exception.arcsort()) @ graph
 
         optional_minus_graph = pynini.closure(
             pynutil.insert("negative: ") + pynini.cross(MINUS, "\"-\"") + NEMO_SPACE, 0, 1
         )
 
         final_graph = optional_minus_graph + pynutil.insert("integer: \"") + self.graph + pynutil.insert("\"")
-
         final_graph = self.add_tokens(final_graph)
         self.fst = final_graph.optimize()
 

@@ -300,6 +300,37 @@ class Normalizer:
         assert sum([len(s) for s in splits]) == len(tokens)
         return splits
 
+    def concat_consecutive_values(self, list_of_dicts):
+        new_list = []
+        prev_dict = None
+        for dictionary in list_of_dicts:
+            cardinal = list(dictionary['tokens'].keys())[0] == 'cardinal'
+            if prev_dict is None:
+                if cardinal:
+                    integer = list(dictionary['tokens']['cardinal'].keys())[0] == 'integer'
+                    if integer:
+                        prev_dict = dictionary.copy()
+                        continue
+                new_list.append(dictionary.copy())
+            else:
+                if cardinal:
+                    integer = list(dictionary['tokens']['cardinal'].keys())[0] == 'integer'
+                    if integer:
+                        new_value = prev_dict['tokens']['cardinal']['integer'] + \
+                                    dictionary['tokens']['cardinal']['integer']
+                        prev_dict = OrderedDict(
+                            [('tokens', OrderedDict([('cardinal', OrderedDict([('integer', new_value)]))]))])
+                        continue
+                new_list.append(prev_dict.copy())
+                prev_dict = None
+                new_list.append(dictionary.copy())
+
+        if prev_dict is not None:
+            new_list.append(prev_dict)
+
+        return new_list
+
+
     def normalize(
         self, text: str, verbose: bool = False, punct_pre_process: bool = False, punct_post_process: bool = False
     ) -> str:
@@ -338,6 +369,8 @@ class Normalizer:
         split_tokens = self._split_tokens_to_reduce_number_of_permutations(tokens)
         output = ""
         for s in split_tokens:
+            # brute force concat consecutive integers
+            s = self.concat_consecutive_values(s)
             tags_reordered = self.generate_permutations(s)
             verbalizer_lattice = None
             for tagged_text in tags_reordered:

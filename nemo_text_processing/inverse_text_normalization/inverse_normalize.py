@@ -69,7 +69,11 @@ class InverseNormalizer(Normalizer):
             from nemo_text_processing.inverse_text_normalization.pt.verbalizers.verbalize_final import (
                 VerbalizeFinalFst,
             )
-
+        elif lang == 'pt_br':  # Portuguese (Português)
+            from nemo_text_processing.inverse_text_normalization.pt_br.taggers.tokenize_and_classify import ClassifyFst
+            from nemo_text_processing.inverse_text_normalization.pt_br.verbalizers.verbalize_final import (
+                VerbalizeFinalFst,
+            )
         elif lang == 'ru':  # Russian (Russkiy Yazyk)
             from nemo_text_processing.inverse_text_normalization.ru.taggers.tokenize_and_classify import ClassifyFst
             from nemo_text_processing.inverse_text_normalization.ru.verbalizers.verbalize_final import (
@@ -155,7 +159,7 @@ def parse_args():
     parser.add_argument(
         "--language",
         help="language",
-        choices=['en', 'de', 'es', 'pt', 'ru', 'fr', 'vi', 'ar', 'es_en', 'zh'],
+        choices=['en', 'de', 'es', 'pt', 'ru', 'fr', 'vi', 'ar', 'es_en', 'zh', 'sv', 'pt_br'],
         default="en",
         type=str,
     )
